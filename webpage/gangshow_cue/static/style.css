@@ -1,0 +1,46 @@
+html, body {
+    font-family: 'Acme', sans-serif;
+}
+
+.item {
+    display: grid;
+    margin-top: 200px;
+    margin-bottom: 100px;
+    background-color: rgb(3, 185, 185);
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+
+.item-heading {
+    margin-left: 10%;
+}
+
+.item-value {
+    text-align: center;
+}
+
+@media only screen and (min-device-width: 600px) and (max-device-width: 1500px) {
+    .item {
+        grid-template-columns: 30% 70%;
+    }
+
+    .app {
+        font-size: 40px;
+    }
+}
+
+@media screen and (min-device-width: 20px) and (max-device-width: 600px) {
+    .item {
+        grid-template-columns: 100%;
+        word-wrap: break-word;
+    }
+
+    .app {
+        font-size: 80px;
+    }
+}
+
+.cue {
+    text-align: center;
+    font-size: 250px;
+}
