@@ -11,51 +11,54 @@ from tornado.options import define, options, parse_command_line
 define("port", default=8888, help="run on the given port", type=int)
 define("debug", default=True, help="run in debug mode")
 
-class MessageBuffer(object):
-	def __init__(self):
-		# cond is notified whenever the message cache is updated
-		self.cond = locks.Condition()
-		self.cache = []
-		self.cache_size = 200
-
-	def get_messages_since(self, cursor):
-		"""Returns a list of messages newer than the given cursor.
-		``cursor`` should be the ``id`` of the last message received.
-		"""
-		results = []
-		for msg in reversed(self.cache):
-			if msg["id"] == cursor:
-				break
-			results.append(msg)
-		results.reverse()
-		return results
-
-	def add_message(self, message):
-		self.cache.append(message)
-		if len(self.cache) > self.cache_size:
-			self.cache = self.cache[-self.cache_size:]
-		self.cond.notify_all()
-
-
-# Making this a non-singleton is left as an exercise for the reader.
-global_message_buffer = MessageBuffer()
-
-
 class IndexHandler(web.RequestHandler):
+	def initialize(self, ref_object, scene_object):
+		self.wks = ref_object
+		self.scene = scene_object
+
 	def get(self):
-		# for i in wks.worksheets():
-		# 	if not SCENE_LOOKUP in i.title:
-		# 		print(i.title)
-		# 		print(i.get_all_records())
-		self.render("index.html", messages=global_message_buffer.cache)
+		data = []
+		for i in self.wks.worksheets():
+			if not self.scene in i.title:
+				data.append(i.title)
+
+		self.render("index.html", data=json.dumps(data))
+
+class ScriptHandler(web.RequestHandler):
+	def initialize(self, ref_object, scene_object):
+		self.wks = ref_object
+		self.scene = scene_object
+
+	def get(self):
+		data = []
+		for i in self.wks.worksheets():
+			if not self.scene in i.title:
+				# print(i.title)
+				data = i.get_all_records()
+			else:
+				scenes = i.get_all_records()
+		output = {}
+		for a in data:
+			output[a['Cue']] = {**a, **self.findScenes(scenes, a['Cue'])}
+
+		self.render("script.js", data=json.dumps(output))
+
+	def findScenes(self, sceneList, number):
+		return {"Scene":"The witch"}
 
 class CueHandler(web.RequestHandler):
+	def initialize(self, ref_object, scene_object):
+		self.wks = ref_object
+		self.scene = scene_object
+		
 	def get(self):
-		# for i in wks.worksheets():
-		# 	if not SCENE_LOOKUP in i.title:
-		# 		print(i.title)
-		# 		print(i.get_all_records())
-		self.render("cue.html", messages=global_message_buffer.cache)
+		data = []
+		for i in self.wks.worksheets():
+			if not self.scene in i.title:
+				# print(i.title)
+				data = i.get_all_records()
+				break
+		self.render("cue.html", data=json.dumps(data))
 
 cl = []
 
@@ -110,8 +113,9 @@ def main():
 
 	app = web.Application(
 		[
-			(r"/", IndexHandler),
-			(r"/cue", CueHandler),
+			(r"/", IndexHandler, {"ref_object" : wks, "scene_object": LOOKPUP_SHEET }),
+			(r"/cue", CueHandler, {"ref_object" : wks, "scene_object": LOOKPUP_SHEET }),
+			(r'/script\.js', ScriptHandler, {"ref_object" : wks, "scene_object": LOOKPUP_SHEET }),
 			(r"/ws", SocketHandler),
 			(r'/(favicon\.ico)', web.StaticFileHandler, {'path': '/static/favicon.ico'}),
 		],
