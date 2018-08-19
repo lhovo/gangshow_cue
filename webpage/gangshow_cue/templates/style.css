@@ -1,0 +1,141 @@
+html, body {
+    font-family: 'Acme', sans-serif;
+    color: lightgrey;
+    background-color: rgb(55, 58, 58);
+}
+
+@media only screen and (min-device-width: 600px) {
+    .item {
+        grid-template-columns: 40% 60%;
+    }
+
+    body {
+        font-size: 40px;
+    }
+
+    #cue {
+        font-size: 250px;
+    }
+
+    .current-notes {
+        grid-template-columns: 20% 80%;
+    }
+
+    .next-notes {
+        grid-template-columns: 20% 80%;
+    }
+
+    .notes-heading {
+        font-size: 32px;
+    }
+
+    .notes-content {
+        font-size: 24px;
+    }
+}
+
+@media screen and (max-device-width: 600px) {
+    .item {
+        grid-template-columns: 100%;
+        word-wrap: break-word;
+    }
+
+    .item-value {
+        text-align: center;
+    }
+
+    body {
+        font-size: 80px;
+    }
+
+    #cue {
+        padding: 10%;
+        font-size: 400px;
+    }
+
+    .current-notes {
+        grid-template-columns: 100%;
+    }
+
+    .next-notes {
+        grid-template-columns: 100%;
+    }
+
+    .notes-heading {
+        font-size: 20px;
+    }
+
+    .notes-content {
+        font-size: 16px;
+    }
+}
+
+#cue {
+    text-align: center;
+} 
+
+.item-heading {
+    margin-left: 10%;
+}
+
+html,body{
+    height: 100%;
+  }
+  body{
+    margin: 0;
+  }
+  body {
+    display: grid;
+    /* grid-gap: 5px; */
+    background-color: lightgrey;
+    height: 100%;
+    grid-template-columns:1fr;
+    grid-template-areas:
+            "current"
+            "currentnotes"
+            "cue"
+            "next"
+            "nextnotes";
+    
+    grid-template-rows: 15% 20% 30% 15% 20%;
+  }
+  .current {
+    grid-area: current;
+    display: grid;
+    background-color: rgb(55, 58, 58);
+    padding-top: 40px;
+    padding-bottom: 40px;
+    /* border-bottom: 10px solid lightgray; */
+  }
+
+  .current-notes {
+    grid-area: currentnotes;
+    background-color: rgb(55, 58, 58);
+    padding-left: 10%;
+    padding-right: 20px;
+    display: grid;
+  }
+
+  #cue {
+     grid-area: cue;
+     background-color: rgb(55, 58, 58);
+     line-height: 250px;
+     color: rgb(5, 139, 172)
+  }
+
+  .next-notes {
+    grid-area: nextnotes;
+    background-color: rgb(55, 58, 58);
+    padding-left: 10%;
+    padding-right: 20px;
+    display: grid;
+  }
+
+  .next {
+    grid-area: next;
+    display: grid;
+    background-color: rgb(55, 58, 58);
+    padding-top: 40px;
+    padding-bottom: 40px;
+    /* border-top: 10px solid lightgray; */
+  }
