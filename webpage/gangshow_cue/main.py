@@ -27,24 +27,23 @@ class IndexHandler(web.RequestHandler):
 				if not self.scene in i.title:
 					data.append(i.title)
 
-		self.render("index.html", data=json.dumps(data))
+		self.render("index.html", data=data)
 
 class ScriptHandler(web.RequestHandler):
 	def initialize(self, ref_object, scene_object):
 		self.wks = ref_object
 		self.scene = scene_object
 
-	def get(self):
+	def get(self, keys):
 		if options.demo:
 			with open('demo.json', 'r') as f:
 				output = json.load(f)
 		else:
 			data = []
 			for i in self.wks.worksheets():
-				if not self.scene in i.title:
-					# print(i.title)
+				if keys in i.title:
 					data = i.get_all_records()
-				else:
+				elif self.scene in i.title:
 					scenes = i.get_all_records()
 			output = {}
 			for a in data:
@@ -56,22 +55,8 @@ class ScriptHandler(web.RequestHandler):
 		return {"Scene":"The witch"}
 
 class CueHandler(web.RequestHandler):
-	def initialize(self, ref_object, scene_object):
-		self.wks = ref_object
-		self.scene = scene_object
-		
-	def get(self):
-		data = []
-		if options.demo:
-			with open('demo.json', 'r') as f:
-				data = json.load(f)
-		else:
-			for i in self.wks.worksheets():
-				if not self.scene in i.title:
-					# print(i.title)
-					data = i.get_all_records()
-					break
-		self.render("cue.html", data=json.dumps(data))
+	def get(self, lookup):
+		self.render("cue.html", data=lookup)
 
 cl = []
 
@@ -131,10 +116,11 @@ def main():
 	app = web.Application(
 		[
 			(r"/", IndexHandler, {"ref_object" : wks, "scene_object": LOOKPUP_SHEET }),
-			(r"/cue", CueHandler, {"ref_object" : wks, "scene_object": LOOKPUP_SHEET }),
-			(r'/script\.js', ScriptHandler, {"ref_object" : wks, "scene_object": LOOKPUP_SHEET }),
+			(r"/cue/(?P<lookup>.*)", CueHandler),
+			(r'/script/(?P<keys>.*)', ScriptHandler, {"ref_object" : wks, "scene_object": LOOKPUP_SHEET }),
 			(r"/ws", SocketHandler),
-			(r'/(favicon\.ico)', web.StaticFileHandler, {'path': '/static/favicon.ico'}),
+			(r"/(demo.html)", web.StaticFileHandler, {'path': 'templates'}),
+			(r'/(favicon\.ico)', web.StaticFileHandler, {'path': 'static'}),
 		],
 		cookie_secret=COOKIE_SECRET,
 		template_path=os.path.join(os.path.dirname(__file__), "templates"),
