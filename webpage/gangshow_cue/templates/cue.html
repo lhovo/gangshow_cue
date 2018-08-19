@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css?family=Acme" rel="stylesheet">
-    <title>Scene Cue - Gang Show</title>
+    <title>Scene {{data.replace('_', ' ').capitalize()}} - Gang Show Brisbane </title>
 </head>
 <body>
     <div class="current item">
@@ -13,22 +12,19 @@
     </div>
     <div class="current-notes">
         <label class="notes-heading">Notes:</label>
-        <label id="current-notes-content" class="notes-content">notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes 
-            notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes 
-        </label>
+        <label id="current-notes-content" class="notes-content"></label>
     </div>
-    <div id="cue" class="cue">21</div>
+    <div id="cue" class="cue"></div>
     <div class="next item">
         <label class="item-heading">Next Scene: </label>
         <label id="next-scene" class="item-value">Scene not loaded</label>
     </div>
     <div class="next-notes">
         <label class="notes-heading">Notes:</label>
-        <label id="next-notes-content" class="notes-content">notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes 
-            notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes</label>
+        <label id="next-notes-content" class="notes-content"></label>
     </div>
 </body>
 
 </html>
 
-<script src="/script.js"></script>
+<script src="/script/{{data}}"></script>

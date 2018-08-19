@@ -53,7 +53,7 @@ class ScriptHandler(web.RequestHandler):
 		outScene = sceneList[0]['Scene']
 		
 		for scene in sceneList:
-			if scene['Cue'] < number:
+			if scene['Cue'] <= number:
 				outScene = scene['Scene']
 
 		return {"Scene":outScene}
@@ -120,15 +120,16 @@ def main():
 	app = web.Application(
 		[
 			(r"/", IndexHandler, {"ref_object" : wks, "scene_object": LOOKPUP_SHEET }),
+			(r'/cue/(.*\.css)', web.StaticFileHandler, {'path': 'templates'}),
 			(r"/cue/(?P<lookup>.*)", CueHandler),
 			(r'/script/(?P<keys>.*)', ScriptHandler, {"ref_object" : wks, "scene_object": LOOKPUP_SHEET }),
 			(r"/ws", SocketHandler),
 			(r"/(demo.html)", web.StaticFileHandler, {'path': 'templates'}),
-			(r'/(favicon\.ico)', web.StaticFileHandler, {'path': 'static'}),
+			(r'/(favicon\.ico)', web.StaticFileHandler, {'path': 'templates'}),
 		],
 		cookie_secret=COOKIE_SECRET,
 		template_path=os.path.join(os.path.dirname(__file__), "templates"),
-		static_path=os.path.join(os.path.dirname(__file__), "static"),
+		static_path=os.path.join(os.path.dirname(__file__), "templates"),
 		xsrf_cookies=True,
 		debug=options.debug,
 	)
