@@ -2,24 +2,33 @@
 <html>
 
 <head>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css?family=Acme" rel="stylesheet">
     <title>Scene Cue - Gang Show</title>
 </head>
 <body>
-    <div class="app">
-        <div class="item">
-            <label class="item-heading">Current Scene: </label>
-            <label id="current-scene" class="item-value">Scene not loaded</label>
-        </div>
-        <div id="cue-number" class="cue">21</div>
-        <div class="item">
-            <label class="item-heading">Next Scene: </label>
-            <label id="next-scene" class="item-value">Scene not loaded</label>
-        </div>
+    <div class="current item">
+        <label class="item-heading">Current Scene: </label>
+        <label id="current-scene" class="item-value">Scene not loaded</label>
+    </div>
+    <div class="current-notes">
+        <label class="notes-heading">Notes:</label>
+        <label id="current-notes-content" class="notes-content">notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes 
+            notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes 
+        </label>
+    </div>
+    <div id="cue" class="cue">21</div>
+    <div class="next item">
+        <label class="item-heading">Next Scene: </label>
+        <label id="next-scene" class="item-value">Scene not loaded</label>
+    </div>
+    <div class="next-notes">
+        <label class="notes-heading">Notes:</label>
+        <label id="next-notes-content" class="notes-content">notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes 
+            notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes notes</label>
     </div>
 </body>
 
 </html>
 
-<script src="/script/{{data}}"></script>
+<script src="/script.js"></script>
