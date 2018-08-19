@@ -20,13 +20,11 @@ class IndexHandler(web.RequestHandler):
 	def get(self):
 		data = []
 		if options.demo:
-			with open('demo.json', 'r') as f:
-				output = json.load(f)
+			output = ['lighting_left', 'lighting_right']
 		else:
 			for i in self.wks.worksheets():
 				if not self.scene in i.title:
 					data.append(i.title)
-
 		self.render("index.html", data=data)
 
 class ScriptHandler(web.RequestHandler):
@@ -52,7 +50,13 @@ class ScriptHandler(web.RequestHandler):
 		self.render("script.js", data=json.dumps(output))
 
 	def findScenes(self, sceneList, number):
-		return {"Scene":"The witch"}
+		outScene = sceneList[0]['Scene']
+		
+		for scene in sceneList:
+			if scene['Cue'] < number:
+				outScene = scene['Scene']
+
+		return {"Scene":outScene}
 
 class CueHandler(web.RequestHandler):
 	def get(self, lookup):
