@@ -10,6 +10,7 @@ from tornado.options import define, options, parse_command_line
 
 define("port", default=8888, help="run on the given port", type=int)
 define("debug", default=True, help="run in debug mode")
+define("demo", default=False, help="run with demo data")
 
 class IndexHandler(web.RequestHandler):
 	def initialize(self, ref_object, scene_object):
@@ -18,9 +19,13 @@ class IndexHandler(web.RequestHandler):
 
 	def get(self):
 		data = []
-		for i in self.wks.worksheets():
-			if not self.scene in i.title:
-				data.append(i.title)
+		if options.demo:
+			with open('demo.json', 'r') as f:
+				output = json.load(f)
+		else:
+			for i in self.wks.worksheets():
+				if not self.scene in i.title:
+					data.append(i.title)
 
 		self.render("index.html", data=json.dumps(data))
 
@@ -30,16 +35,20 @@ class ScriptHandler(web.RequestHandler):
 		self.scene = scene_object
 
 	def get(self):
-		data = []
-		for i in self.wks.worksheets():
-			if not self.scene in i.title:
-				# print(i.title)
-				data = i.get_all_records()
-			else:
-				scenes = i.get_all_records()
-		output = {}
-		for a in data:
-			output[a['Cue']] = {**a, **self.findScenes(scenes, a['Cue'])}
+		if options.demo:
+			with open('demo.json', 'r') as f:
+				output = json.load(f)
+		else:
+			data = []
+			for i in self.wks.worksheets():
+				if not self.scene in i.title:
+					# print(i.title)
+					data = i.get_all_records()
+				else:
+					scenes = i.get_all_records()
+			output = {}
+			for a in data:
+				output[a['Cue']] = {**a, **self.findScenes(scenes, a['Cue'])}
 
 		self.render("script.js", data=json.dumps(output))
 
@@ -53,11 +62,15 @@ class CueHandler(web.RequestHandler):
 		
 	def get(self):
 		data = []
-		for i in self.wks.worksheets():
-			if not self.scene in i.title:
-				# print(i.title)
-				data = i.get_all_records()
-				break
+		if options.demo:
+			with open('demo.json', 'r') as f:
+				data = json.load(f)
+		else:
+			for i in self.wks.worksheets():
+				if not self.scene in i.title:
+					# print(i.title)
+					data = i.get_all_records()
+					break
 		self.render("cue.html", data=json.dumps(data))
 
 cl = []
@@ -93,23 +106,27 @@ def main():
 	parse_command_line()
 	COOKIE_SECRET = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__"
 
-	with open('input_keys.json', 'r') as f:
-		input_keys = json.load(f)
-		SPREADSHEET_ID = input_keys['SPREADSHEET_ID']
-		LOOKPUP_SHEET = input_keys['LOOKPUP_SHEET']
-		COOKIE_SECRET = input_keys['COOKIE_SECRET']
+	if not options.demo:
+		with open('input_keys.json', 'r') as f:
+			input_keys = json.load(f)
+			SPREADSHEET_ID = input_keys['SPREADSHEET_ID']
+			LOOKPUP_SHEET = input_keys['LOOKPUP_SHEET']
+			COOKIE_SECRET = input_keys['COOKIE_SECRET']
 
-	store = file.Storage('token.json')
-	creds = store.get()
-	if not creds or creds.invalid:
-		flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
-		creds = tools.run_flow(flow, store)
+		store = file.Storage('token.json')
+		creds = store.get()
+		if not creds or creds.invalid:
+			flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
+			creds = tools.run_flow(flow, store)
 
-	gc = gspread.authorize(creds)
+		gc = gspread.authorize(creds)
 
-	# Open a worksheet from spreadsheet with one shot
-	wks = gc.open_by_key(SPREADSHEET_ID)
-	lookup = wks.worksheet(LOOKPUP_SHEET).get_all_records()
+		# Open a worksheet from spreadsheet with one shot
+		wks = gc.open_by_key(SPREADSHEET_ID)
+		lookup = wks.worksheet(LOOKPUP_SHEET).get_all_records()
+	else:
+		wks = None
+		LOOKPUP_SHEET = None
 
 	app = web.Application(
 		[
