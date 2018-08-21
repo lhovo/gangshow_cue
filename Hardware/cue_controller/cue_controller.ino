@@ -25,14 +25,63 @@ IPAddress ip(192, 168, 0, 177);
 char server[] = "192.168.0.53";
 WebSocketClient webClient;
 EthernetClient client;
-bool isLEDOn = false;
+
+#define WS_PORT 8888
+#define WS_PATH "/ws"
+#define WS_HOST "192.168.0.53"
 
 #define LED_PIN 13
 #define CONF_TC_MODULE TC3
 
+#define LED_RED 12
+#define LED_ORANGE 11
+#define LED_GREEN 10
+#define BUTTON_RED 9
+#define BUTTON_ORANGE 6 
+#define BUTTON_GREEN 5
+
+unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
+// Variables will change:
+unsigned long lastDebounceTimeRed = 0;  // the last time the output pin was toggled
+int buttonStateRed = HIGH;       // the current reading from the input pin
+int lastButtonStateRed = HIGH;   // the previous reading from the input pin
+unsigned long lastDebounceTimeOrange = 0;  // the last time the output pin was toggled
+int buttonStateOrange = HIGH;       // the current reading from the input pin
+int lastButtonStateOrange = HIGH;   // the previous reading from the input pin
+unsigned long lastDebounceTimeGreen = 0;  // the last time the output pin was toggled
+int buttonStateGreen = HIGH;       // the current reading from the input pin
+int lastButtonStateGreen = HIGH;   // the previous reading from the input pin
+bool inStandby = false, prevStandby = false;
+
+#define NUM_OFFSET 48
+#define MAX_16 0xFFFFFF
+uint16_t cueCount = 0, prevCount = MAX_16;
+uint16_t updateFreq = 0, ledFreq = 0;
+bool sendUpdate = false, ledUpdate = false;
+bool isLEDOn = false, isDbgLEDOn;
+
+String stringBuffer;
+char charBuffer[1024];
+StaticJsonDocument<1024> jsonBuffer;
+
 void setup() {
   Watchdog.enable(8192);
   Serial.begin(9600);
+
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(LED_RED, OUTPUT);
+  pinMode(LED_ORANGE, OUTPUT);
+  pinMode(LED_GREEN, OUTPUT);
+
+  digitalWrite(LED_PIN, LOW);
+  digitalWrite(LED_RED, LOW);
+  digitalWrite(LED_ORANGE, LOW);
+  digitalWrite(LED_GREEN, LOW);
+
+  // Input pins
+  pinMode(BUTTON_RED, INPUT);
+  pinMode(BUTTON_ORANGE, INPUT);
+  pinMode(BUTTON_GREEN, INPUT);
   
   alpha4.begin(0x70);  // pass in the address
   alpha4.setBrightness(1); // 1-15
@@ -45,6 +94,7 @@ void setup() {
 
   Watchdog.reset();
   // start the Ethernet connection:
+  Ethernet.init(A5);
   if (Ethernet.begin(mac) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP");
     // no point in carrying on, so do nothing forevermore:
@@ -83,10 +133,10 @@ void setup() {
   alpha4.writeDisplay();
 
   // Handshake with the server
-  webClient.path = "/";
-  webClient.host = "192.168.0.53";
+  webClient.path = WS_PATH;
+  webClient.host = WS_HOST;
   
-  client.connect(webClient.host, 9000);
+  client.connect(webClient.host, WS_PORT);
   Watchdog.reset();
   
   if (client.connected()) {
@@ -100,23 +150,40 @@ void setup() {
         while(true) {delay(300);}
     }
   }
+  else
+  {
+    alpha4.writeDigitAscii(0, 'F');
+    alpha4.writeDigitAscii(1, 'A');
+    alpha4.writeDigitAscii(2, 'I');
+    alpha4.writeDigitAscii(3, 'L');
+    alpha4.writeDisplay();
+    while(true) {delay(300);}
+  }
 
   alpha4.clear();
   alpha4.writeDigitRaw(0, 0xFFFF);
   alpha4.writeDisplay();
+  digitalWrite(LED_RED, HIGH);
   delay(200);
   alpha4.writeDigitRaw(0, 0x0);
   alpha4.writeDigitRaw(1, 0xFFFF);
   alpha4.writeDisplay();
+  digitalWrite(LED_RED, LOW);
+  digitalWrite(LED_ORANGE, HIGH);
   delay(200);
   alpha4.writeDigitRaw(1, 0x0);
   alpha4.writeDigitRaw(2, 0xFFFF);
   alpha4.writeDisplay();
+  digitalWrite(LED_ORANGE, LOW);
+  digitalWrite(LED_GREEN, HIGH);
   delay(200);
   alpha4.writeDigitRaw(2, 0x0);
   alpha4.writeDigitRaw(3, 0xFFFF);
   alpha4.writeDisplay();
+  digitalWrite(LED_GREEN, LOW);
+  digitalWrite(LED_PIN, HIGH);
   delay(200);
+  digitalWrite(LED_PIN, LOW);
   alpha4.clear();
   alpha4.writeDisplay();
   Watchdog.reset();
@@ -127,7 +194,15 @@ void setup() {
   alpha4.writeDigitAscii(3, '/');
   alpha4.writeDisplay();
 
-  pinMode(LED_PIN, OUTPUT);
+   // Enable pullups
+  digitalWrite(BUTTON_RED, HIGH);
+  digitalWrite(BUTTON_ORANGE, HIGH);
+  digitalWrite(BUTTON_GREEN, HIGH);
+
+  attachInterrupt(BUTTON_RED, btn_red, CHANGE);
+  attachInterrupt(BUTTON_ORANGE, btn_orange, CHANGE);
+  attachInterrupt(BUTTON_GREEN, btn_green, CHANGE);
+
   configure_tc();
   configure_tc_callbacks();
 }
@@ -171,19 +246,77 @@ int FreeRam () {
   return &stack_dummy - sbrk(0);
 }
 
-#define NUM_OFFSET 48
-#define MAX_16 0xFFFFFF
-uint16_t cueCount = 0, prevCount = MAX_16;
-uint16_t updateFreq = 0;
-bool sendUpdate = false;
+void debounce() {
+  if ((millis() - lastDebounceTimeRed) > debounceDelay) {
+    // if the button state has changed:
+    if (lastButtonStateRed != buttonStateRed) {
+      buttonStateRed = lastButtonStateRed;
+      if(!buttonStateRed && client.connected() && cueCount > 1) {
+        cueCount--;
+        inStandby = false;
+      }
+    }
+  }
 
-String stringBuffer;
-char charBuffer[256];
-StaticJsonDocument<256> jsonBuffer;
+  if ((millis() - lastDebounceTimeOrange) > debounceDelay) {
+    // if the button state has changed:
+    if (lastButtonStateOrange != buttonStateOrange) {
+      buttonStateOrange = lastButtonStateOrange;
+
+      if(!buttonStateOrange && client.connected()) {
+        inStandby = true;
+      }
+      
+    }
+  }
+
+  if ((millis() - lastDebounceTimeGreen) > debounceDelay) {
+    // if the button state has changed:
+    if (lastButtonStateGreen != buttonStateGreen) {
+      buttonStateGreen = lastButtonStateGreen;
+
+      if(!buttonStateGreen && client.connected()) {
+        cueCount++;
+        inStandby = false;
+      }
+    }
+  }
+}
+
+void btn_red() {
+  int buttonReading = digitalRead(BUTTON_RED);
+  if(buttonReading != lastButtonStateRed){
+    lastDebounceTimeRed = millis();
+  }
+  
+  lastButtonStateRed = buttonReading;
+}
+
+void btn_orange() {
+  int buttonReading = digitalRead(BUTTON_ORANGE);
+  if(buttonReading != lastButtonStateOrange){
+    lastDebounceTimeOrange = millis();
+  }
+  
+  lastButtonStateOrange = buttonReading;
+}
+
+void btn_green() {
+  int buttonReading = digitalRead(BUTTON_GREEN);
+  if(buttonReading != lastButtonStateGreen){
+    lastDebounceTimeGreen = millis();
+  }
+  
+  lastButtonStateGreen = buttonReading;
+}
 
 void loop() {
-  if(client.connected() && cueCount != prevCount) {
+  debounce();
+  
+  if(client.connected() && ((cueCount != prevCount) || (inStandby != prevStandby) ) ) {
     prevCount = cueCount;
+    prevStandby = inStandby;
+    
     if(cueCount == 0) {
       alpha4.writeDigitAscii(0, '/');
       alpha4.writeDigitAscii(1, '-');
@@ -214,8 +347,15 @@ void loop() {
       alpha4.writeDigitAscii(2, ((cueCount/10)%10) + NUM_OFFSET);
       alpha4.writeDigitAscii(3, (cueCount%10) + NUM_OFFSET);
     }
-    
+
+    if(inStandby) {
+      alpha4.writeDigitAscii(0, 'X');
+    }
     alpha4.writeDisplay();
+
+    // Advance the next data send
+    updateFreq = 0;
+    sendUpdate = true;
   }
 
   if (client.connected()) {
@@ -235,7 +375,7 @@ void loop() {
       }
       else {
         JsonObject root = jsonBuffer.as<JsonObject>();
-        int update = root["upd"];
+        int update = root["update"];
         cueCount = update;
       }
     }
@@ -244,7 +384,7 @@ void loop() {
     prevCount = MAX_16;
     client.stop();
     delay(10);
-    client.connect(webClient.host, 8000);
+    client.connect(webClient.host, WS_PORT);
     delay(10);
     Serial.println("Disconnected :O");
     if (client.connected()) {
@@ -267,23 +407,31 @@ void loop() {
     }
   }
 
-  if(sendUpdate) {
-    digitalWrite(LED_PIN, isLEDOn);
+  if(ledUpdate) {
     isLEDOn = !isLEDOn;
-    stringBuffer = "";
+    if(inStandby) {
+      digitalWrite(LED_GREEN, isLEDOn);
+      digitalWrite(LED_ORANGE, LOW);
+    }
+    else {
+      digitalWrite(LED_ORANGE, isLEDOn);
+      digitalWrite(LED_GREEN, LOW);
+    }
+    ledUpdate = false;
+  }
+
+  if(sendUpdate) {
+    isDbgLEDOn = !isDbgLEDOn;
+    digitalWrite(LED_PIN, isDbgLEDOn);
   
     if (client.connected()) {
-      jsonBuffer.clear();
-      JsonObject obj = jsonBuffer.as<JsonObject>();
-      if(cueCount != 0) {
-        sprintf(charBuffer, "{ \"cue\": %d }", cueCount);
+      if(cueCount > 0) {
+        sprintf(charBuffer, "{\"cue\":%d,\"standby\":%d}", cueCount, inStandby);
       }
       else {
-        sprintf(charBuffer, "{ \"hlp\": %d }", cueCount);
+        sprintf(charBuffer, "{\"hlp\":%d}", cueCount);
       }
-      delay(10);
-      webClient.sendData(charBuffer);
-      delay(10);
+      webClient.sendData(F(charBuffer));
     }
     else if (prevCount != MAX_16)
     {
@@ -304,11 +452,17 @@ void heartbeat(tc_module*) {
   Watchdog.reset();
     
   updateFreq++;
+  ledFreq++;
 
-  if(updateFreq >= 30)
+  if(updateFreq >= 60)
   {
     updateFreq = 0;
     sendUpdate = true;
+  }
+  if(ledFreq >= 15)
+  {
+    ledFreq = 0;
+    ledUpdate = true;
   }
 }
 
