@@ -14,7 +14,7 @@ define("demo", default=False, help="run with demo data")
 
 class IndexHandler(web.RequestHandler):
 	def initialize(self, ref_object, scene_object):
-		self.wks = ref_object
+		self.getWorksheet = ref_object
 		self.scene = scene_object
 
 	def get(self):
@@ -22,14 +22,14 @@ class IndexHandler(web.RequestHandler):
 		if options.demo:
 			output = ['lighting_left', 'lighting_right']
 		else:
-			for i in self.wks.worksheets():
+			for i in self.getWorksheet():
 				if not self.scene in i.title:
 					data.append(i.title)
 		self.render("index.html", data=data)
 
 class ScriptHandler(web.RequestHandler):
 	def initialize(self, ref_object, scene_object):
-		self.wks = ref_object
+		self.getWorksheet = ref_object
 		self.scene = scene_object
 
 	def get(self, keys):
@@ -38,7 +38,7 @@ class ScriptHandler(web.RequestHandler):
 				output = json.load(f)
 		else:
 			data = []
-			for i in self.wks.worksheets():
+			for i in self.getWorksheet():
 				if keys in i.title:
 					data = i.get_all_records()
 				elif self.scene in i.title:
@@ -91,7 +91,24 @@ SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
 SPREADSHEET_ID = ""
 LOOKPUP_SHEET = ""
 
+def getWorksheet():
+	store = file.Storage('token.json')
+	creds = store.get()
+
+	if not creds or creds.invalid:
+		flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
+		creds = tools.run_flow(flow, store)
+
+	gc = gspread.authorize(creds)
+
+	# Open a worksheet from spreadsheet with one shot
+	wks = gc.open_by_key(SPREADSHEET_ID)
+
+	return wks.worksheets();
+
 def main():
+	global SPREADSHEET_ID, LOOKPUP_SHEET
+
 	parse_command_line()
 	COOKIE_SECRET = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__"
 
@@ -101,28 +118,15 @@ def main():
 			SPREADSHEET_ID = input_keys['SPREADSHEET_ID']
 			LOOKPUP_SHEET = input_keys['LOOKPUP_SHEET']
 			COOKIE_SECRET = input_keys['COOKIE_SECRET']
-
-		store = file.Storage('token.json')
-		creds = store.get()
-		if not creds or creds.invalid:
-			flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
-			creds = tools.run_flow(flow, store)
-
-		gc = gspread.authorize(creds)
-
-		# Open a worksheet from spreadsheet with one shot
-		wks = gc.open_by_key(SPREADSHEET_ID)
-		lookup = wks.worksheet(LOOKPUP_SHEET).get_all_records()
 	else:
-		wks = None
 		LOOKPUP_SHEET = None
 
 	app = web.Application(
 		[
-			(r"/", IndexHandler, {"ref_object" : wks, "scene_object": LOOKPUP_SHEET }),
+			(r"/", IndexHandler, {"ref_object" : getWorksheet, "scene_object": LOOKPUP_SHEET }),
 			(r'/cue/(.*\.css)', web.StaticFileHandler, {'path': 'templates'}),
 			(r"/cue/(?P<lookup>.*)", CueHandler),
-			(r'/script/(?P<keys>.*)', ScriptHandler, {"ref_object" : wks, "scene_object": LOOKPUP_SHEET }),
+			(r'/script/(?P<keys>.*)', ScriptHandler, {"ref_object" : getWorksheet, "scene_object": LOOKPUP_SHEET }),
 			(r"/ws", SocketHandler),
 			(r"/(demo.html)", web.StaticFileHandler, {'path': 'templates'}),
 			(r'/(favicon\.ico)', web.StaticFileHandler, {'path': 'templates'}),
