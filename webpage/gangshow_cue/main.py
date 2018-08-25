@@ -32,6 +32,9 @@ class ScriptHandler(web.RequestHandler):
 		self.getWorksheet = ref_object
 		self.scene = scene_object
 
+	def set_default_headers(self):
+		self.set_header("type", "text/javascript")
+
 	def get(self, keys):
 		if options.demo:
 			with open('demo.json', 'r') as f:
