@@ -4,10 +4,11 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css?family=Acme" rel="stylesheet">
     <title>Scene {{data.replace('_', ' ').capitalize()}} - Gang Show Brisbane </title>
+    <script src="/script/{{data}}"></script>
 </head>
 <body>
     <div class="current item">
-        <label class="item-heading">Current Scene: </label>
+        <label class="item-heading"><span id="connected"></span> Current Scene: </label>
         <label id="current-scene" class="item-value">Scene not loaded</label>
     </div>
     <div class="current-notes">
@@ -26,5 +27,3 @@
 </body>
 
 </html>
-
-<script src="/script/{{data}}"></script>

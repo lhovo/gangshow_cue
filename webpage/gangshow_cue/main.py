@@ -46,6 +46,8 @@ class ScriptHandler(web.RequestHandler):
 			output = {}
 			for a in data:
 				output[a['Cue']] = {**a, **self.findScenes(scenes, a['Cue'])}
+				del(output[a['Cue']]['Cue'])
+				output[a['Cue']]['Notes'] = "<br />".join(a['Notes'].split("\n"))
 
 		self.render("script.js", data=json.dumps(output))
 
@@ -71,6 +73,7 @@ class SocketHandler(websocket.WebSocketHandler):
 	def open(self):
 		if self not in cl:
 			cl.append(self)
+			self.write_message("{\"cue\":23,\"standby\":0}")
 
 	def on_close(self):
 		if self in cl:
