@@ -68,6 +68,7 @@ class CueHandler(web.RequestHandler):
 		self.render("cue.html", data=lookup)
 
 cl = []
+clientMessage = {'cue':0, 'standby':0}
 
 class SocketHandler(websocket.WebSocketHandler):
 	def check_origin(self, origin):
@@ -76,7 +77,7 @@ class SocketHandler(websocket.WebSocketHandler):
 	def open(self):
 		if self not in cl:
 			cl.append(self)
-			self.write_message("{\"cue\":23,\"standby\":0}")
+			self.write_message(json.dumps(clientMessage))
 
 	def on_close(self):
 		if self in cl:
@@ -86,6 +87,10 @@ class SocketHandler(websocket.WebSocketHandler):
 	def on_message(self, message):
 		try:
 			incoming = json.loads(message)
+			if 'cue' in incoming:
+				clientMessage['cue'] = incoming['cue']
+			if 'standby' in incoming:
+				clientMessage['standby'] = incoming['standby']
 			for client in cl:
 				if not self is client:
 					client.write_message(json.dumps(incoming))

@@ -22,7 +22,6 @@ byte mac[] = { 0x98, 0x76, 0xB6, 0x10, 0xDB, 0x2C };
 
 // Set the static IP address to use if the DHCP fails to assign
 IPAddress ip(192, 168, 0, 177);
-char server[] = "192.168.0.53";
 WebSocketClient webClient;
 EthernetClient client;
 
@@ -30,6 +29,7 @@ EthernetClient client;
 #define WS_PATH "/ws"
 #define WS_HOST "192.168.0.53"
 
+char server[] = WS_HOST;
 #define LED_PIN 13
 #define CONF_TC_MODULE TC3
 
@@ -65,7 +65,6 @@ char charBuffer[1024];
 StaticJsonDocument<1024> jsonBuffer;
 
 void setup() {
-  Watchdog.enable(8192);
   Serial.begin(9600);
 
   pinMode(LED_PIN, OUTPUT);
@@ -92,7 +91,6 @@ void setup() {
   alpha4.writeDigitRaw(3, 0xFFFF);
   alpha4.writeDisplay();
 
-  Watchdog.reset();
   // start the Ethernet connection:
   Ethernet.init(A5);
   if (Ethernet.begin(mac) == 0) {
@@ -101,7 +99,8 @@ void setup() {
     // try to congifure using IP address instead of DHCP:
     Ethernet.begin(mac, ip);
   }
-  Watchdog.reset();
+  Watchdog.enable(8192);
+  
   // give the Ethernet shield a second to initialize:
   delay(1000);
   Serial.println("connecting...");
@@ -454,7 +453,7 @@ void heartbeat(tc_module*) {
   updateFreq++;
   ledFreq++;
 
-  if(updateFreq >= 60)
+  if(updateFreq >= 120)
   {
     updateFreq = 0;
     sendUpdate = true;

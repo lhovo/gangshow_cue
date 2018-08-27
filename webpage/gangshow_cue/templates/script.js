@@ -4,6 +4,7 @@ cueKeys.sort((a, b) => a - b);
 
 currentCue = 0;
 standby = 0;
+websocket = null;
 
 function refresh() {
 	currentScene = getScene(currentCue, false);
@@ -30,6 +31,7 @@ function getScene(cueNumber, findForward) {
 function doConnect() {
 	url = window.location.protocol == 'http:' ? 'ws://' : 'wss://';
 	url += window.location.hostname + ":" + window.location.port + '/ws';
+	websocket = null; // ensure we clean up the old connection
 	websocket = new WebSocket(url);
 	websocket.onopen = function(evt) { onOpen(evt) };
 	websocket.onclose = function(evt) { onClose(evt) };
@@ -64,7 +66,7 @@ function onError(evt) {
 
 	websocket.close();
 	document.getElementById('connected').className='red';
-	setTimeout(doConnect, 5000);
+	// setTimeout(doConnect, 5000);
 }
 
 // function heartbeat() {
