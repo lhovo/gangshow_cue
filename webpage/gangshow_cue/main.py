@@ -47,10 +47,20 @@ class ScriptHandler(web.RequestHandler):
 				elif self.scene in i.title:
 					scenes = i.get_all_records()
 			output = {}
+			presentCue = 0
+			additionalCue = 0
 			for a in data:
-				output[a['Cue']] = {**a, **self.findScenes(scenes, a['Cue'])}
-				del(output[a['Cue']]['Cue'])
-				output[a['Cue']]['Notes'] = "<br />".join(a['Notes'].split("\n"))
+				if isinstance(a['Cue'], int):
+					presentCue = a['Cue']
+					additionalCue = 0
+				else:
+					additionalCue += 1
+
+				if True: #a['TeamNote'] != '':
+					output[presentCue*1000 + additionalCue] = {**a, **self.findScenes(scenes, presentCue)}
+					del(output[presentCue*1000 + additionalCue]['Cue']) # remove the duplicate
+					output[presentCue*1000 + additionalCue]['RunScript'] = "<br />".join(a['RunScript'].split("\n"))
+					output[presentCue*1000 + additionalCue]['TeamNote'] = "<br />".join(a['TeamNote'].split("\n"))
 
 		self.render("script.js", data=json.dumps(output))
 
@@ -58,14 +68,20 @@ class ScriptHandler(web.RequestHandler):
 		outScene = sceneList[0]['Scene']
 		
 		for scene in sceneList:
-			if scene['Cue'] <= number:
-				outScene = scene['Scene']
+			try:
+				if int(scene['Cue']) <= number:
+					outScene = scene['Scene']
+			except ValueError:
+				pass
 
 		return {"Scene":outScene}
 
-class CueHandler(web.RequestHandler):
+class PageHandler(web.RequestHandler):
+	def initialize(self, page):
+		self.page = page
+
 	def get(self, lookup):
-		self.render("cue.html", data=lookup)
+		self.render(self.page, data=lookup)
 
 cl = []
 clientMessage = {'cue':0, 'standby':0}
@@ -93,7 +109,14 @@ class SocketHandler(websocket.WebSocketHandler):
 				clientMessage['standby'] = incoming['standby']
 			for client in cl:
 				if not self is client:
-					client.write_message(json.dumps(incoming))
+					if 'update' in incoming:
+						client.write_message(json.dumps(incoming))
+					else:
+						client.write_message(json.dumps(clientMessage))
+
+			if 'hlp' in incoming:
+				self.write_message(json.dumps({"update":clientMessage['cue']}))
+
 		except json.decoder.JSONDecodeError:
 			print("Unable to decode: ", message)
 
@@ -136,7 +159,9 @@ def main():
 		[
 			(r"/", IndexHandler, {"ref_object" : getWorksheet, "scene_object": LOOKPUP_SHEET }),
 			(r'/cue/(.*\.css)', web.StaticFileHandler, {'path': 'templates'}),
-			(r"/cue/(?P<lookup>.*)", CueHandler),
+			(r"/cue/(?P<lookup>.*)", PageHandler, {'page': 'cue.html'}),
+			(r'/notes/(.*\.css)', web.StaticFileHandler, {'path': 'templates'}),
+			(r"/notes/(?P<lookup>.*)", PageHandler, {'page': 'notes.html'}),
 			(r'/script/(?P<keys>.*)', ScriptHandler, {"ref_object" : getWorksheet, "scene_object": LOOKPUP_SHEET }),
 			(r"/ws", SocketHandler),
 			(r"/(demo.html)", web.StaticFileHandler, {'path': 'templates'}),

@@ -19,13 +19,25 @@ function refresh() {
 }
 
 function getScene(cueNumber, findForward) {
-	findpoint = findForward ? cueNumber : cueNumber+1;
-	for (cuereturn = 0; (cueKeys[cuereturn] < findpoint) && (cuereturn < cueKeys.length-1); cuereturn++) {}
-	retCue = findForward ? cueKeys[cuereturn] : cueKeys[cuereturn-1];
+	findpoint = cueNumber*1000;
+	for (cuereturn = 0; (cueKeys[cuereturn] <= findpoint) && (cuereturn < cueKeys.length-1); cuereturn++) {
+		//console.log(cueKeys[cuereturn])
+	}
+	if(cuereturn != 0) { cuereturn--; }
+	retCue = cueKeys[cuereturn];
+	retString = (retCue/1000).toString();
 	foundScene = !!cueData[retCue] === true ? cueData[retCue].Scene : 'data loading error';
-	foundNotes = !!cueData[retCue] === true ? cueData[retCue].Notes : 'data loading error';
-	console.log("requested " + cueNumber + " Found " + retCue);
-	return {"Cue":retCue, 'Scene':foundScene, 'Notes':foundNotes};
+	if(foundScene.length == 0) { 
+		for (; cuereturn > 0; cuereturn--) {
+			if(cueData[cueKeys[cuereturn].toString()].Scene.length !=0) {
+				foundScene = cueData[cueKeys[cuereturn].toString()].Scene;
+				break;
+			}
+		}
+	}
+	foundNotes = !!cueData[retCue] === true ? cueData[retCue].RunScript : 'data loading error';
+	//console.log("requested " + cueNumber + " Found " + retCue);
+	return {"Cue":retString, 'Scene':foundScene, 'Notes':foundNotes};
 }
 
 function doConnect() {

@@ -1,0 +1,13 @@
+# Full guide here -> https://hackernoon.com/reaching-python-development-nirvana-bb5692adf30c
+
+# Install pipenv
+$ pip install -U pipenv
+
+# cd to project directory and install python
+$ pipenv install --deploy
+
+# run project with 
+$ pipenv run server
+
+# Add new requirements with $ pipenv install packagename
+# Development dependancies use $ pipenv install --dev packagename
