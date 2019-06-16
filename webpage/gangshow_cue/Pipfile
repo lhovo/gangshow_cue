@@ -4,6 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+pylint = "*"
 
 [packages]
 gspread = "*"
@@ -14,4 +15,4 @@ tornado = "*"
 server = "python main.py"
 
 [requires]
-python_version = "3.6"
+python_version = "3.7"

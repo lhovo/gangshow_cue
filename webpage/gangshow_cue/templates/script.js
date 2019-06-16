@@ -1,6 +1,5 @@
-var cueData = {% raw data %};
-var cueKeys = Object.keys(cueData).map(Number);
-cueKeys.sort((a, b) => a - b);
+var cueData = {}
+var cueKeys = {};
 
 currentCue = 0;
 standby = 0;
