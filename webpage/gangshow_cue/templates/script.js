@@ -1,5 +1,5 @@
-var cueData = {}
-var cueKeys = {};
+var cueData = null;
+var cueKeys = null;
 
 currentCue = 0;
 standby = 0;
@@ -18,6 +18,10 @@ function refresh() {
 }
 
 function getScene(cueNumber, findForward) {
+	if(cueData == null)
+	{
+		return {"Cue":'999', 'Scene':'Loading', 'Notes':'Loading'};
+	}
 	findpoint = cueNumber*1000;
 	for (cuereturn = 0; (cueKeys[cuereturn] <= findpoint) && (cuereturn < cueKeys.length-1); cuereturn++) {
 		//console.log(cueKeys[cuereturn])
@@ -80,10 +84,31 @@ function onError(evt) {
 	// setTimeout(doConnect, 5000);
 }
 
+function loadJSON(callback) {   
+	var xobj = new XMLHttpRequest();
+	xobj.overrideMimeType("application/json");
+	xobj.open('GET', '/script/'+document.getElementById("jsScript").getAttribute("lookup"), true);
+	xobj.onreadystatechange = function () {
+		if (xobj.readyState == 4 && xobj.status == "200") {
+			callback(xobj.responseText);
+		}
+	};
+	xobj.send(null);  
+ }
+
+ function init() {
+	loadJSON(function(response) {
+		cueData = JSON.parse(response);
+		cueKeys = Object.keys(cueData).map(Number);
+		cueKeys.sort((a, b) => a - b);
+		refresh();
+	});
+}
+
 // function heartbeat() {
 // 	websocket.send('ping');
 // 	setTimeout(heartbeat, 1000);
 // }
 
 doConnect();
-window.addEventListener("load", refresh, false);
+window.addEventListener("load", init, false);
