@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/asset/style.css">
+    <link href="https://fonts.googleapis.com/css?family=Acme" rel="stylesheet">
+    <title>Scene {{data.replace('_', ' ').capitalize()}} - Gang Show Brisbane </title>
+    <script type="text/javascript" id="jsScript" lookup="{{data}}" src="/asset/script.js"></script>
+</head>
+<body>
+    <div class="current item">
+        <label class="item-heading"><span id="connected"></span> 
+            <label id="place" class="item-value"></label></label>
+        <label id="Next Scene" class="item-value">Scene not loaded</label>
+    </div>
+    <div class="current-notes">
+    </div>
+    <div id="TeamCue" class="cue"></div>
+    <div id="Cue" class="cue"></div>
+    <div class="next item">
+        <label class="item-heading">
+            <label id="place2" class="item-value"></label></label>
+        <label id="next-scene" class="item-value">Scene not loaded</label>
+    </div>
+    <div class="next-notes">
+    </div>
+</body>
+
+</html>

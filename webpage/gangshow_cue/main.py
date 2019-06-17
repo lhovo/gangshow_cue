@@ -31,13 +31,27 @@ class ScriptHandler(web.RequestHandler):
 	def set_default_headers(self):
 		self.set_header("type", "text/javascript")
 
-	def get(self, keys):
+	def findScenes(self, sceneList, number):
+		outScene = sceneList[0]['Scene']
+		
+		for scene in sceneList:
+			try:
+				if int(scene['Cue']) <= number:
+					outScene = scene['Scene']
+			except ValueError:
+				pass
+
+		return {"Scene":outScene}
+
+	def fullScript(self, keys):
 		data = []
 		for i in self.getWorksheet():
+			print(i)
 			if keys in i.title:
 				data = i.get_all_records()
 			elif self.scene in i.title:
 				scenes = i.get_all_records()
+		
 		output = {}
 		presentCue = 0
 		additionalCue = 0
@@ -54,24 +68,34 @@ class ScriptHandler(web.RequestHandler):
 				output[presentCue*1000 + additionalCue]['RunScript'] = "<br />".join(a['RunScript'].split("\n"))
 				output[presentCue*1000 + additionalCue]['TeamNote'] = "<br />".join(a['TeamNote'].split("\n"))
 
-		self.render("data.js", data=json.dumps(output))
+		return output
 
-	def findScenes(self, sceneList, number):
-		outScene = sceneList[0]['Scene']
+	def cueOnly(self, keys):
+		data = []
+		for i in self.getWorksheet():
+			if keys in i.title:
+				data = i.get_all_records()
+				break
 		
-		for scene in sceneList:
-			try:
-				if int(scene['Cue']) <= number:
-					outScene = scene['Scene']
-			except ValueError:
-				pass
+		output = {}
+		presentCue = 0
+		for a in data:
+			if isinstance(a['Cue'], int):
+				presentCue = a['Cue']
+				output[presentCue] = {**a}
+				del(output[presentCue]['Cue']) # remove the duplicate
 
-		return {"Scene":outScene}
+		return output
+
+	def get(self, keys):
+		# output = self.fullScript(keys)
+		output = self.cueOnly(keys)
+		self.render("data.js", data=json.dumps(output))
 
 class CuePageHandler(web.RequestHandler):
 	def getPageLayout(self, lookup):
 		page = {
-			1: "January",
+			"Cast": "cast.html",
 			2: "February",
 			3: "March",
 			4: "April",
@@ -86,9 +110,8 @@ class CuePageHandler(web.RequestHandler):
 		}
 		return page.get(lookup, "cue.html")
 
-	def get(self, lookup):
-		
-		self.render("cue.html", data=lookup)
+	def get(self, lookup):	
+		self.render(self.getPageLayout(lookup), data=lookup)
 
 cl = []
 clientMessage = {'cue':0, 'standby':0}
