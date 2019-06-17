@@ -114,7 +114,7 @@ class CuePageHandler(web.RequestHandler):
 		self.render(self.getPageLayout(lookup), data=lookup)
 
 cl = []
-clientMessage = {'cue':0, 'standby':0}
+clientMessage = {'cue':1, 'standby':0}
 
 class SocketHandler(websocket.WebSocketHandler):
 	def check_origin(self, origin):
