@@ -5,38 +5,6 @@ currentCue = 1;
 standby = 0;
 websocket = null;
 
-function refresh() {
-	if (cueData && cueData.hasOwnProperty(currentCue))
-	{
-		presentCue = cueData[currentCue];
-		document.getElementById('Cue').innerHTML = !!currentCue === true ? currentCue : "?" ;
-		for (prop in presentCue)
-		{
-			if(document.getElementById(prop))
-			{
-				document.getElementById(prop).innerHTML = presentCue[prop];
-			}
-		}
-	}
-	else
-	{
-		document.getElementById('Cue').innerHTML = "?";
-	}
-}
-
-function refresh_fullScript()
-{
-	currentScene = getScene(currentCue, false);
-	nextScene = getScene(currentCue+1, true);
-	document.getElementById('cue').innerHTML = !!currentCue === true ? currentCue : "?" 
-	document.getElementById('current-cue').innerHTML = currentScene.Cue;
-	document.getElementById('next-cue').innerHTML = nextScene.Cue;
-	document.getElementById('current-scene').innerHTML = currentScene.Scene;
-	document.getElementById('next-scene').innerHTML = nextScene.Scene;
-	document.getElementById('current-notes-content').innerHTML = currentScene.Notes;
-	document.getElementById('next-notes-content').innerHTML = nextScene.Notes;
-}
-
 function getScene(cueNumber, findForward)
 {
 	if(cueData == null)
