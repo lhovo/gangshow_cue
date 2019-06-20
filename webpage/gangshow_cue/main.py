@@ -96,7 +96,7 @@ class CuePageHandler(web.RequestHandler):
 	def getPageLayout(self, lookup):
 		page = {
 			"Cast": "cast.html",
-			2: "February",
+			"Lighting": "lighting.html",
 			3: "March",
 			4: "April",
 			5: "May",
