@@ -10,27 +10,7 @@ html, body {
 	}
 
 	body {
-		font-size: 40px;
-	}
-
-	#cue {
-		font-size: 250px;
-	}
-
-	.current-notes {
-		grid-template-columns: 20% 80%;
-	}
-
-	.next-notes {
-		grid-template-columns: 20% 80%;
-	}
-
-	.notes-heading {
-		font-size: 32px;
-	}
-
-	.notes-content {
-		font-size: 24px;
+		font-size: 20px;
 	}
 }
 
@@ -45,34 +25,9 @@ html, body {
 	}
 
 	body {
-		font-size: 80px;
-	}
-
-	#cue {
-		padding: 10%;
-		font-size: 400px;
-	}
-
-	.current-notes {
-		grid-template-columns: 100%;
-	}
-
-	.next-notes {
-		grid-template-columns: 100%;
-	}
-
-	.notes-heading {
 		font-size: 20px;
 	}
-
-	.notes-content {
-		font-size: 16px;
-	}
 }
-
-#cue {
-	text-align: center;
-} 
 
 .item-heading {
 	margin-left: 10%;
@@ -86,23 +41,30 @@ body {
 	margin: 0;
 }
 
+.leftspot, .midcue, .rightspot {
+	border-bottom: 1px solid grey;
+}
+
+.midcue {
+	text-align: center;
+} 
+
 .grid {
 	display: grid;
 	background-color: rgb(55, 58, 58);
 	padding:30px;
 	display: grid;
+	border-inline-start-color: 1px solid #dfdfdf;
 	grid-template-columns: 40% 20% 40%;
 	grid-gap: 5px;
 }
 
-#cue {
-	grid-area: cue;
-	background-color: rgb(55, 58, 58);
-	line-height: 250px;
-	color: rgb(5, 139, 172)
+#Cue {
+	margin-left: 50px;
 }
 
 #connected {
+	float: left;
 	height: 25px;
 	width: 25px;
 	background-color: #bbb;
