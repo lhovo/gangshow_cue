@@ -21,6 +21,9 @@ class IndexHandler(web.RequestHandler):
 		for i in self.getWorksheet():
 			if not self.scene in i.title:
 				data.append(i.title)
+
+		if len(data) is 0:
+			data.append("Unable to fetch data")
 		self.render("index.html", data=data)
 
 class ScriptHandler(web.RequestHandler):
@@ -163,12 +166,16 @@ def getWorksheet():
 		flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
 		creds = tools.run_flow(flow, store)
 
-	gc = gspread.authorize(creds)
+	try:
+		gc = gspread.authorize(creds)
 
-	# Open a worksheet from spreadsheet with one shot
-	wks = gc.open_by_key(SPREADSHEET_ID)
+		# Open a worksheet from spreadsheet with one shot
+		wks = gc.open_by_key(SPREADSHEET_ID)
 
-	return wks.worksheets()
+		return wks.worksheets()
+	except ConnectionAbortedError as e:
+		print("Server unable to connect to data store")
+		return []
 
 def main():
 	global SPREADSHEET_ID, LOOKPUP_SHEET
