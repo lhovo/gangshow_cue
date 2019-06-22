@@ -1,0 +1,81 @@
+html, body {
+	font-family: 'Acme', sans-serif;
+	color: lightgrey;
+	background-color: rgb(55, 58, 58);
+}
+
+@media only screen and (min-device-width: 600px) {
+	.item {
+		grid-template-columns: 40% 60%;
+	}
+
+	body {
+		font-size: 20px;
+	}
+}
+
+@media screen and (max-device-width: 600px) {
+	.item {
+		grid-template-columns: 100%;
+		word-wrap: break-word;
+	}
+
+	.item-value {
+		text-align: center;
+	}
+
+	body {
+		font-size: 20px;
+	}
+}
+
+.item-heading {
+	margin-left: 10%;
+}
+
+html,body {
+	height: 100%;
+}
+
+body {
+	margin: 0;
+}
+
+.cueNumber, .script, .notes {
+	border-bottom: 1px solid grey;
+}
+
+.midcue {
+	text-align: center;
+} 
+
+.grid {
+	display: grid;
+	background-color: rgb(55, 58, 58);
+	padding:30px;
+	display: grid;
+	border-inline-start-color: 1px solid #dfdfdf;
+	grid-template-columns: 10% 60% 40%;
+	grid-gap: 5px;
+}
+
+#Cue {
+	margin-left: 50px;
+}
+
+#connected {
+	float: left;
+	height: 25px;
+	width: 25px;
+	background-color: #bbb;
+	border-radius: 50%;
+	display: inline-block;
+}
+
+#connected.red {
+	background-color: red;
+}
+
+#connected.green {
+	background-color: green;
+}
