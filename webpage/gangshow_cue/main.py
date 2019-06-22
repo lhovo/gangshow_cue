@@ -70,41 +70,56 @@ class CuePageHandler(web.RequestHandler):
 		self.render(self.getPageLayout(lookup), data=lookup)
 
 # WebSocket Handler
-cl = []
+clientConnections = []
+controllerConnections = []
 clientMessage = {'cue':1, 'standby':0}
+
+def sendClientMessage():
+	for client in clientConnections:
+		client.write_message(json.dumps(clientMessage))
+
 class SocketHandler(websocket.WebSocketHandler):
+	def initialize(self, connectionType):
+		self.connectionType = connectionType
+
 	def check_origin(self, origin):
 		return True
 
 	def open(self):
-		if self not in cl:
-			cl.append(self)
-			self.write_message(json.dumps(clientMessage))
+		if self.connectionType is "webController":
+			if self not in controllerConnections:
+				controllerConnections.append(self)
+				self.write_message(json.dumps({"update":clientMessage['cue']}))
+		elif self.connectionType is "webClient":
+			if self not in clientConnections:
+				clientConnections.append(self)
+				self.write_message(json.dumps(clientMessage))
 
 	def on_close(self):
-		if self in cl:
-			cl.remove(self)
+		if self.connectionType is "webController":
+			if self in controllerConnections:
+				controllerConnections.remove(self)
+		elif self.connectionType is "webClient":
+			if self in clientConnections:
+				clientConnections.remove(self)
 
 	# Mssage echo it out to other clients if it's json
 	def on_message(self, message):
-		try:
-			incoming = json.loads(message)
-			if 'cue' in incoming:
-				clientMessage['cue'] = incoming['cue']
-			if 'standby' in incoming:
-				clientMessage['standby'] = incoming['standby']
-			for client in cl:
-				if not self is client:
-					if 'update' in incoming:
-						client.write_message(json.dumps(incoming))
-					else:
-						client.write_message(json.dumps(clientMessage))
+		if self.connectionType is "webController":
+			try:
+				incoming = json.loads(message)
+				if 'cue' in incoming:
+					clientMessage['cue'] = incoming['cue']
+				if 'standby' in incoming:
+					clientMessage['standby'] = incoming['standby']
 
-			if 'hlp' in incoming:
-				self.write_message(json.dumps({"update":clientMessage['cue']}))
+				if 'hlp' in incoming:
+					self.write_message(json.dumps({"update":clientMessage['cue']}))
 
-		except json.decoder.JSONDecodeError:
-			print("Unable to decode: ", message)
+			except json.decoder.JSONDecodeError:
+				print("Unable to decode:", message)
+		else:
+			print("Invalid message on channel", message)
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
@@ -148,16 +163,18 @@ def main():
 			(r'/asset/(.*)', web.StaticFileHandler, { 'path': 'templates'}),
 			(r"/cue/(?P<lookup>.*)", CuePageHandler, {}),
 			(r'/script/(?P<pageName>.*)', ScriptHandler, { "ref_object" : getWorksheet }),
-			(r"/ws", SocketHandler),
-			(r'/(favicon\.ico)', web.StaticFileHandler, { 'path': 'templates'}),
+			(r"/ws", SocketHandler, { "connectionType" : "webClient" }),
+			(r"/controler", SocketHandler, { "connectionType" : "webController" }),
 		],
 		cookie_secret=COOKIE_SECRET,
 		template_path=os.path.join(os.path.dirname(__file__), "templates"),
-		static_path=os.path.join(os.path.dirname(__file__), "templates"),
+		static_path=os.path.join(os.path.dirname(__file__), "static"),
 		xsrf_cookies=True,
 		debug=options.debug,
 	)
 	app.listen(options.port)
+	# Send connected websocket clients an update every 2 seconds
+	ioloop.PeriodicCallback(sendClientMessage, 2000).start()
 	ioloop.IOLoop.current().start()
 
 if __name__ == '__main__':
