@@ -64,7 +64,7 @@ function onMessage(evt)
 {
 	// proccess incoming message
 	incomingMessage = JSON.parse(evt.data)
-	if (incomingMessage.hasOwnProperty('cue'))
+	if (incomingMessage.hasOwnProperty('cue') && currentCue !== incomingMessage['cue'])
 	{
 		currentCue = incomingMessage['cue'];
 		standby = incomingMessage['standby'];
