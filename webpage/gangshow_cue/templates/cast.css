@@ -2,145 +2,28 @@ html, body {
 	font-family: 'Acme', sans-serif;
 	color: lightgrey;
 	background-color: rgb(55, 58, 58);
+	font-size: 80px;
 }
 
-@media only screen and (min-device-width: 600px) {
-	.item {
-		grid-template-columns: 40% 60%;
-	}
-
-	body {
-		font-size: 40px;
-	}
-
-	#cue {
-		font-size: 250px;
-	}
-
-	.current-notes {
-		grid-template-columns: 20% 80%;
-	}
-
-	.next-notes {
-		grid-template-columns: 20% 80%;
-	}
-
-	.notes-heading {
-		font-size: 32px;
-	}
-
-	.notes-content {
-		font-size: 24px;
-	}
-}
-
-@media screen and (max-device-width: 600px) {
-	.item {
-		grid-template-columns: 100%;
-		word-wrap: break-word;
-	}
-
-	.item-value {
-		text-align: center;
-	}
-
-	body {
-		font-size: 80px;
-	}
-
-	#cue {
-		padding: 10%;
-		font-size: 400px;
-	}
-
-	.current-notes {
-		grid-template-columns: 100%;
-	}
-
-	.next-notes {
-		grid-template-columns: 100%;
-	}
-
-	.notes-heading {
-		font-size: 20px;
-	}
-
-	.notes-content {
-		font-size: 16px;
-	}
-}
-
-#cue {
+.current-call {
 	text-align: center;
-} 
-
-.item-heading {
-	margin-left: 10%;
+	padding-top: 10%;
+	padding-bottom: 10%;
 }
 
-html,body {
-	height: 100%;
+#CastCall {
+	font-size: 40px;
+	transition-property: font-size;
+	transition-duration: 2s;
+	text-transform: uppercase;
 }
 
-body {
-	margin: 0;
-}
-
-body {
-	display: grid;
-	/* grid-gap: 5px; */
-	background-color: lightgrey;
-	height: 100%;
-	grid-template-columns:1fr;
-	grid-template-areas:
-			"current"
-			"currentnotes"
-			"cue"
-			"next"
-			"nextnotes";
-	
-	grid-template-rows: 15% 20% 30% 15% 20%;
-}
-
-.current {
-	grid-area: current;
-	display: grid;
-	background-color: rgb(55, 58, 58);
-	padding-top: 40px;
-	padding-bottom: 40px;
-	/* border-bottom: 10px solid lightgray; */
-}
-
-.current-notes {
-	grid-area: currentnotes;
-	background-color: rgb(55, 58, 58);
-	padding-left: 10%;
-	padding-right: 20px;
-	display: grid;
-}
-
-#cue {
-	grid-area: cue;
-	background-color: rgb(55, 58, 58);
-	line-height: 250px;
-	color: rgb(5, 139, 172)
-}
-
-.next-notes {
-	grid-area: nextnotes;
-	background-color: rgb(55, 58, 58);
-	padding-left: 10%;
-	padding-right: 20px;
-	display: grid;
+#CastCall.transition-class {
+	font-size: 80px;
 }
 
 .next {
-	grid-area: next;
-	display: grid;
-	background-color: rgb(55, 58, 58);
-	padding-top: 40px;
-	padding-bottom: 40px;
-	/* border-top: 10px solid lightgray; */
+	text-align: center;
 }
 
 #connected {
@@ -149,6 +32,7 @@ body {
 	background-color: #bbb;
 	border-radius: 50%;
 	display: inline-block;
+	margin-left: 10px;
 }
 
 #connected.red {
@@ -157,4 +41,36 @@ body {
 
 #connected.green {
 	background-color: green;
+}
+
+
+.shimmer {
+  display: inline-block;
+  color:white;
+  
+  background: rgb(5, 139, 172) -webkit-gradient(linear, 100% 0, 0 0, from(rgb(5, 139, 172)), color-stop(0.5, aqua), to(teal));
+  
+  background-position: -4rem top; /*50px*/
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-animation-name: shimmer;
+  -webkit-animation-duration: 3s;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-background-size: 4rem 100%; /*50px*/
+  
+}
+
+@-webkit-keyframes shimmer {
+    0% {
+        background-position: -4rem top; /*50px*/
+    }
+
+    70% {
+        background-position: 12.5rem top; /*200px*/
+    }
+
+    100% {
+        background-position: 12.5rem top; /*200px*/
+    }
 }
