@@ -16,7 +16,11 @@ function refresh() {
 				document.getElementById(prop).innerHTML = presentCue[prop];
 			}
 			if (prop === "CastCall") {
-				document.getElementById("CastCall").classList += " transition-class";
+				document.getElementById("CastCall").classList.remove("transition-class");
+				setTimeout(function(){ 
+					document.getElementById("CastCall").classList.add("transition-class");
+				}, 100);
+
 			}
 		}
 	}

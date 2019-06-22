@@ -11,15 +11,18 @@ html, body {
 	padding-bottom: 10%;
 }
 
-#CastCall {
+.base-class {
 	font-size: 40px;
+	transition: linear;
 	transition-property: font-size;
-	transition-duration: 2s;
+	transition-duration: 0s;
 	text-transform: uppercase;
 }
 
-#CastCall.transition-class {
+.transition-class {
 	font-size: 80px;
+	transition-duration: 2s;
+	transition-delay: 0.2s;
 }
 
 .next {
