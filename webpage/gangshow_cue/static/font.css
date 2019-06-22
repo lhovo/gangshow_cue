@@ -1,0 +1,7 @@
+/* latin */
+@font-face {
+    font-family: 'Acme';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Acme Regular'), local('Acme-Regular'), url('/static/Acme-Regular.ttf');
+  }
