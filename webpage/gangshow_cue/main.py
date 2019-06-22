@@ -11,6 +11,7 @@ from tornado.options import define, options, parse_command_line
 define("port", default=8888, help="run on the given port", type=int)
 define("debug", default=True, help="run in debug mode")
 
+# Return the main page with all the webpage selections on it
 class IndexHandler(web.RequestHandler):
 	def initialize(self, ref_object, scene_object):
 		self.getWorksheet = ref_object
@@ -26,99 +27,51 @@ class IndexHandler(web.RequestHandler):
 			data.append("Unable to fetch data")
 		self.render("index.html", data=data)
 
+# Return the correct data from gSpreadsheets for the requested page
 class ScriptHandler(web.RequestHandler):
-	def initialize(self, ref_object, scene_object):
+	def initialize(self, ref_object):
 		self.getWorksheet = ref_object
-		self.scene = scene_object
 
 	def set_default_headers(self):
 		self.set_header("type", "text/javascript")
 
-	def findScenes(self, sceneList, number):
-		outScene = sceneList[0]['Scene']
-		
-		for scene in sceneList:
-			try:
-				if int(scene['Cue']) <= number:
-					outScene = scene['Scene']
-			except ValueError:
-				pass
-
-		return {"Scene":outScene}
-
-	def fullScript(self, keys):
+	def cueOnly(self, pageName):
 		data = []
-		for i in self.getWorksheet():
-			print(i)
-			if keys in i.title:
-				data = i.get_all_records()
-			elif self.scene in i.title:
-				scenes = i.get_all_records()
-		
-		output = {}
-		presentCue = 0
-		additionalCue = 0
-		for a in data:
-			if isinstance(a['Cue'], int):
-				presentCue = a['Cue']
-				additionalCue = 0
-			else:
-				additionalCue += 1
-
-			if True: #a['TeamNote'] != '':
-				output[presentCue*1000 + additionalCue] = {**a, **self.findScenes(scenes, presentCue)}
-				del(output[presentCue*1000 + additionalCue]['Cue']) # remove the duplicate
-				output[presentCue*1000 + additionalCue]['RunScript'] = "<br />".join(a['RunScript'].split("\n"))
-				output[presentCue*1000 + additionalCue]['TeamNote'] = "<br />".join(a['TeamNote'].split("\n"))
-
-		return output
-
-	def cueOnly(self, keys):
-		data = []
-		for i in self.getWorksheet():
-			if keys in i.title:
-				data = i.get_all_records()
+		for sheet in self.getWorksheet():
+			if pageName in sheet.title:
+				data = sheet.get_all_records()
 				break
 		
 		output = {}
 		presentCue = 0
-		for a in data:
-			if isinstance(a['Cue'], int):
-				presentCue = a['Cue']
-				output[presentCue] = {**a}
+		for row in data:
+			if isinstance(row['Cue'], int):
+				presentCue = row['Cue']
+				output[presentCue] = {**row}
 				del(output[presentCue]['Cue']) # remove the duplicate
 
 		return output
 
-	def get(self, keys):
-		# output = self.fullScript(keys)
-		output = self.cueOnly(keys)
+	def get(self, pageName):
+		# output = self.fullScript(pageName)
+		output = self.cueOnly(pageName)
 		self.render("data.js", data=json.dumps(output))
 
+# Return the correct HTML page
 class CuePageHandler(web.RequestHandler):
 	def getPageLayout(self, lookup):
 		page = {
 			"Cast": "cast.html",
 			"Lighting": "lighting.html",
-			3: "March",
-			4: "April",
-			5: "May",
-			6: "June",
-			7: "July",
-			8: "August",
-			9: "September",
-			10: "October",
-			11: "November",
-			12: "December"
 		}
 		return page.get(lookup, "cue.html")
 
 	def get(self, lookup):	
 		self.render(self.getPageLayout(lookup), data=lookup)
 
+# WebSocket Handler
 cl = []
 clientMessage = {'cue':1, 'standby':0}
-
 class SocketHandler(websocket.WebSocketHandler):
 	def check_origin(self, origin):
 		return True
@@ -191,12 +144,12 @@ def main():
 
 	app = web.Application(
 		[
-			(r"/", IndexHandler, {"ref_object" : getWorksheet, "scene_object": LOOKPUP_SHEET }),
-			(r'/asset/(.*)', web.StaticFileHandler, {'path': 'templates'}),
+			(r"/", IndexHandler, { "ref_object" : getWorksheet, "scene_object": LOOKPUP_SHEET }),
+			(r'/asset/(.*)', web.StaticFileHandler, { 'path': 'templates'}),
 			(r"/cue/(?P<lookup>.*)", CuePageHandler, {}),
-			(r'/script/(?P<keys>.*)', ScriptHandler, {"ref_object" : getWorksheet, "scene_object": LOOKPUP_SHEET }),
+			(r'/script/(?P<pageName>.*)', ScriptHandler, { "ref_object" : getWorksheet }),
 			(r"/ws", SocketHandler),
-			(r'/(favicon\.ico)', web.StaticFileHandler, {'path': 'templates'}),
+			(r'/(favicon\.ico)', web.StaticFileHandler, { 'path': 'templates'}),
 		],
 		cookie_secret=COOKIE_SECRET,
 		template_path=os.path.join(os.path.dirname(__file__), "templates"),
