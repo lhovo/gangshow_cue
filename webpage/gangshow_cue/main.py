@@ -63,6 +63,7 @@ class CuePageHandler(web.RequestHandler):
 		page = {
 			"Cast": "cast.html",
 			"Lighting": "lighting.html",
+			"Sound": "sound.html"
 		}
 		return page.get(lookup, "cue.html")
 
@@ -86,7 +87,7 @@ class SocketHandler(websocket.WebSocketHandler):
 		return True
 
 	def open(self):
-		if self.connectionType is "webController":
+		if self.connectionType is "webSockHardware":
 			if self not in controllerConnections:
 				controllerConnections.append(self)
 				self.write_message(json.dumps({"update":clientMessage['cue']}))
@@ -96,7 +97,7 @@ class SocketHandler(websocket.WebSocketHandler):
 				self.write_message(json.dumps(clientMessage))
 
 	def on_close(self):
-		if self.connectionType is "webController":
+		if self.connectionType is "webSockHardware":
 			if self in controllerConnections:
 				controllerConnections.remove(self)
 		elif self.connectionType is "webClient":
@@ -105,7 +106,7 @@ class SocketHandler(websocket.WebSocketHandler):
 
 	# Mssage echo it out to other clients if it's json
 	def on_message(self, message):
-		if self.connectionType is "webController":
+		if self.connectionType is "webSockHardware":
 			try:
 				incoming = json.loads(message)
 				if 'cue' in incoming:
@@ -164,7 +165,7 @@ def main():
 			(r"/cue/(?P<lookup>.*)", CuePageHandler, {}),
 			(r'/script/(?P<pageName>.*)', ScriptHandler, { "ref_object" : getWorksheet }),
 			(r"/ws", SocketHandler, { "connectionType" : "webClient" }),
-			(r"/controler", SocketHandler, { "connectionType" : "webController" }),
+			(r"/hardware", SocketHandler, { "connectionType" : "webSockHardware" }),
 		],
 		cookie_secret=COOKIE_SECRET,
 		template_path=os.path.join(os.path.dirname(__file__), "templates"),
