@@ -5,10 +5,10 @@ function refresh() {
 		presentCue = cueData[currentCue];
 
 		document.getElementById('Cue').innerHTML = !!currentCue === true ? currentCue : "" ;
-		document.getElementById('bracket').innerHTML = !!currentCue === true ? ")" : "" ;
+		document.getElementById('Bracket').innerHTML = !!currentCue === true ? ")" : "" ;
 		
 		// only say scene not loaded if there's a problem with the data
-		document.getElementById('next-scene').innerHTML = !!currentCue === true ? "Next Scene:" : "Scene not Loaded" ;
+		document.getElementById('NextSceneHeading').innerHTML = !!currentCue === true ? "Next Scene:" : "Scene not Loaded" ;
 		for (prop in presentCue)
 		{
 			if(document.getElementById(prop))

@@ -38,6 +38,10 @@ html, body {
 	margin-left: 10px;
 }
 
+#Cue, #Bracket {
+	font-size: 40px;
+}
+
 #connected.red {
 	background-color: red;
 }
