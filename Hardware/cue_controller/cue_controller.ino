@@ -21,13 +21,13 @@ struct tc_module tc_instance;
 byte mac[] = { 0x98, 0x76, 0xB6, 0x10, 0xDB, 0x2C };
 
 // Set the static IP address to use if the DHCP fails to assign
-IPAddress ip(192, 168, 0, 177);
+IPAddress ip(192, 168, 1, 250);
 WebSocketClient webClient;
 EthernetClient client;
 
 #define WS_PORT 8888
-#define WS_PATH "/ws"
-#define WS_HOST "192.168.0.53"
+#define WS_PATH "/hardware"
+#define WS_HOST "192.168.1.200"
 
 char server[] = WS_HOST;
 #define LED_PIN 13

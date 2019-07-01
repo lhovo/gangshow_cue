@@ -142,7 +142,7 @@ def getWorksheet():
 		wks = gc.open_by_key(SPREADSHEET_ID)
 
 		return wks.worksheets()
-	except ConnectionAbortedError as e:
+	except:
 		print("Server unable to connect to data store")
 		return []
 
