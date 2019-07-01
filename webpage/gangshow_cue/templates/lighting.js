@@ -1,11 +1,15 @@
 
 function refresh()
 {
-	if (cueData && cueData.hasOwnProperty(currentCue))
+	if (cueData)
 	{
 		var cueLength = document.getElementsByClassName("leftspot").length;
 		var keys = Object.keys(cueData);
-		var startIndex = keys.indexOf(currentCue.toString());
+		var nearestNumber = keys.reduce(function(prev, curr) {
+			return (Math.abs(curr - currentCue) < Math.abs(prev - currentCue) ? curr : prev);
+		  });
+		  
+		var startIndex = keys.indexOf(nearestNumber.toString());
 
 		// Calculate the start so the current cue is in the middle
 		if (startIndex > Math.ceil(cueLength/2))
@@ -24,9 +28,9 @@ function refresh()
 		for (i = 0; i < cueLength; i++) { 
 			presentCue = cueData[keys[startIndex+i]];
 
-			leftNotes[i].innerHTML = presentCue['Left Spot'].replace(/(?:\r\n|\r|\n)/g, '<br>')
+			leftNotes[i].innerHTML = presentCue['OP'].replace(/(?:\r\n|\r|\n)/g, '<br>')
 			cueNumber[i].innerHTML = keys[startIndex+i]
-			rightNotes[i].innerHTML = presentCue['Right Spot'].replace(/(?:\r\n|\r|\n)/g, '<br>')
+			rightNotes[i].innerHTML = presentCue['P'].replace(/(?:\r\n|\r|\n)/g, '<br>')
 		}
 
 		
