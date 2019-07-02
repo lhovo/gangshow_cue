@@ -73,6 +73,7 @@ class CuePageHandler(web.RequestHandler):
 # WebSocket Handler
 clientConnections = []
 controllerConnections = []
+monitorConnections = []
 clientMessage = {'cue':1, 'standby':0}
 
 def sendClientMessage():
@@ -95,6 +96,9 @@ class SocketHandler(websocket.WebSocketHandler):
 			if self not in clientConnections:
 				clientConnections.append(self)
 				self.write_message(json.dumps(clientMessage))
+		elif self.connectionType is "webSockMonitor":
+			if self not in monitorConnections:
+				monitorConnections.append(self)
 
 	def on_close(self):
 		if self.connectionType is "webSockHardware":
@@ -103,24 +107,45 @@ class SocketHandler(websocket.WebSocketHandler):
 		elif self.connectionType is "webClient":
 			if self in clientConnections:
 				clientConnections.remove(self)
+		elif self.connectionType is "webSockMonitor":
+			if self in monitorConnections:
+				monitorConnections.remove(self)
+
+	def sendControllerMessage(self, message):
+		for controller in controllerConnections:
+			controller.write_message(json.dumps(message))
+
+	def sendMonitorMessage(self, message):
+		for monitor in monitorConnections:
+			monitor.write_message(json.dumps(message))
 
 	# Mssage echo it out to other clients if it's json
 	def on_message(self, message):
+		try:
+			incoming = json.loads(message)
+		except json.decoder.JSONDecodeError:
+			print("Unable to decode:", message)
+			return
+
 		if self.connectionType is "webSockHardware":
-			try:
-				incoming = json.loads(message)
-				if 'cue' in incoming:
-					clientMessage['cue'] = incoming['cue']
-				if 'standby' in incoming:
-					clientMessage['standby'] = incoming['standby']
+			if 'cue' in incoming:
+				clientMessage['cue'] = incoming['cue']
+				sendClientMessage()
+			elif 'standby' in incoming:
+				clientMessage['standby'] = incoming['standby']
+				sendClientMessage()
+			elif 'hlp' in incoming:
+				self.write_message(json.dumps({"update":clientMessage['cue']}))
+			else:
+				print("Invalid message on channel", message)
 
-				if 'hlp' in incoming:
-					self.write_message(json.dumps({"update":clientMessage['cue']}))
-
-			except json.decoder.JSONDecodeError:
-				print("Unable to decode:", message)
-		else:
-			print("Invalid message on channel", message)
+			self.sendMonitorMessage(incoming)	
+		elif self.connectionType is "webSockMonitor":
+			if 'update' in incoming or 'cue' in incoming:
+				self.write_message(json.dumps({"update":clientMessage['cue']}))
+				self.sendControllerMessage(incoming)
+			else:
+				print("Invalid message on channel", message)
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
@@ -166,6 +191,7 @@ def main():
 			(r'/script/(?P<pageName>.*)', ScriptHandler, { "ref_object" : getWorksheet }),
 			(r"/ws", SocketHandler, { "connectionType" : "webClient" }),
 			(r"/hardware", SocketHandler, { "connectionType" : "webSockHardware" }),
+			(r"/monitor", SocketHandler, { "connectionType" : "webSockMonitor" }),
 		],
 		cookie_secret=COOKIE_SECRET,
 		template_path=os.path.join(os.path.dirname(__file__), "templates"),
