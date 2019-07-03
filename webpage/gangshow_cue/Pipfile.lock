@@ -97,6 +97,7 @@
         },
         "tornado": {
             "hashes": [
+                "sha256:3819e7ec96e49e5ccb1153a4da0ef743be81782bd86d3fccbda864e7abd251b2",
                 "sha256:1174dcb84d08887b55defb2cda1986faeeea715fff189ef3dc44cce99f5fca6b",
                 "sha256:2613fab506bd2aedb3722c8c64c17f8f74f4070afed6eea17f20b2115e445aec",
                 "sha256:44b82bc1146a24e5b9853d04c142576b4e8fa7a92f2e30bc364a85d1f75c4de2",
