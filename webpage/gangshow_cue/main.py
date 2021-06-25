@@ -1,11 +1,9 @@
-from tornado import websocket, web, ioloop, escape, locks
-import json
-import asyncio
-import os.path
-import uuid
-import gspread
-
+from tornado import websocket, web, ioloop
 from tornado.options import define, options, parse_command_line
+
+import json
+import os.path
+import gspread
 
 define("port", default=8888, help="run on the given port", type=int)
 define("debug", default=True, help="run in debug mode")
@@ -40,7 +38,7 @@ class ScriptHandler(web.RequestHandler):
             if pageName in sheet.title:
                 data = sheet.get_all_records()
                 break
-        
+
         output = {}
         presentCue = 0
         for row in data:
@@ -77,7 +75,10 @@ clientMessage = {'cue':1, 'standby':0}
 
 def sendClientMessage():
     for client in clientConnections:
-        client.write_message(json.dumps(clientMessage))
+        try:
+            client.write_message(json.dumps(clientMessage))
+        except websocket.WebSocketClosedError as e:
+            print(e)
 
 class SocketHandler(websocket.WebSocketHandler):
     def initialize(self, connectionType):
