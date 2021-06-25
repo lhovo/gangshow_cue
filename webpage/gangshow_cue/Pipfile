@@ -8,7 +8,6 @@ pylint = "*"
 
 [packages]
 gspread = "*"
-oauth2client = "*"
 tornado = "*"
 
 [scripts]
